@@ -6,6 +6,8 @@ __pycache__/
 data/
 data.json
 projectDoc.pdf
+test/
+test.py
 
 # C extensions
 *.so

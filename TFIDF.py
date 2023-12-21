@@ -2,37 +2,60 @@ import numpy as np
 from data_processor import tokenize
 from math import log
 from jsonParser import jsonParser
+from collections import ChainMap
 
 class TFIDF:
     def __init__(self, dataFolderPath:str, candidates:list[int]):
         self.dataFolderPath = dataFolderPath
         self.candidates = candidates
         self.data = list() # entire candidates list
-        # candidates = range(1)
+        self.TFIDF_Data = list()
+        
+        # initialize data
         for candidate in candidates:
             docData = list() # 1 doc of candidates
             with open(f"{dataFolderPath}/document_{candidate}.txt", encoding="utf8") as file:
                 for paragraph in file:
-                    paragraphData = np.array(tokenize(paragraph)) # 1 paragraph of the doc
+                    words = tokenize(paragraph)
+                    """
+                    Convert Data to dict later via:
+                    dicted = {word: count for word in words for count in [words.count(word)]}
+                    """
+                    paragraphData = words # 1 paragraph of the doc (dict)
                     docData.append(paragraphData)
             # docData = np.concatenate(docData)
             self.data.append(docData)
-    
+
+        # initialize TD-IDF data
+        self.TFIDF_Data = [sum(Doc, []) for Doc in self.data]
+        self.TFIDF_Data = [{word: [count] for word in Doc for count in [Doc.count(word)]} for Doc in self.TFIDF_Data]
     def calculate_tf(self, term:str, docNumber:int):
         """
         TF = number of times the term appears in a document / total number of words in the document
         """
-        flatDoc = np.concatenate(self.data[docNumber])
-        return len(flatDoc[flatDoc == term]) / len(flatDoc)
+        words = sum(self.data[docNumber], [])
+        flatDoc = {word: count for word in words for count in [words.count(word)]}
+        return flatDoc[term] / len(flatDoc)
     
     def calculate_idf(self, term:str):
+        # print(self.data)
+        # for Doc in self.data:
+        #     print(Doc)
+        #     print("--------------------------------")
         """
         IDF = log(number of the documents in the corpus / number of the documents in the corpus that contain the term)
         """
-        flatData = [np.concatenate(Doc) for Doc in self.data]
+        for flatDoc in self.TFIDF_Data:
+            print(sorted([[key, value] for key, value in flatDoc.items()], key=lambda x: x[1], reverse=True))
+            print("--------------------------------")
+
         Appeared = 0
-        for Doc in flatData:
-            if np.any(Doc == term):
+        for Doc in self.data:
+            Doc = sum(Doc, [])
+            flatDoc = {word: count for word in Doc for count in [Doc.count(word)]}
+            # print(sorted([[key, value] for key, value in flatDoc.items()], key=lambda x: x[1], reverse=True))
+            # print("--------------------------------")
+            if term in flatDoc.keys():
                 Appeared += 1
 
         if (len(self.candidates) == 1 and Appeared == 1):
@@ -55,7 +78,7 @@ class TFIDF:
 if __name__ == "__main__":
     js = jsonParser("data.json")
 
-    tfidf = TFIDF("data", range(10))
+    tfidf = TFIDF("data", range(1000))
     term = input().lower()
     for file in tfidf.data:
         # for line in file:
@@ -65,7 +88,7 @@ if __name__ == "__main__":
         # print(file)
         pass
     print()
-    # print(tfidf.calculate_tf(term, 0))
+    print(tfidf.calculate_tf(term, 0))
     # print(tfidf.calculate_idf(term))
     print(tfidf.calculate_tfidf(term, 0))
     

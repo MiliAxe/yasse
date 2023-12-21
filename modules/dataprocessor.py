@@ -1,79 +1,12 @@
-"""
-This module provides a data processing class and related functions to process and analyze string data from text files. It includes capabilities for tokenizing text, locating sentences, counting word occurrences, and managing text data across multiple documents.
-
-Functions:
-    - sentencize(str) -> List[str]:
-        Splits a string into sentences based on full stops followed by whitespace.
-
-    - tokenize(str) -> List[str]:
-        Converts a string to lowercase, removes punctuation, and splits it into a list of words.
-
-Data Classes:
-    - SentencePosition:
-        A data class that stores a document index and a sentence index from that document for easy reference.
-
-Classes:
-    - DataProcessor:
-        A class that processes and stores occurrence information about words in multiple documents.
-
-        Methods:
-            - add_dir(dir) -> None:
-                Adds all text files from a specified directory to the data processor instance.
-
-            - add_file(path) -> None:
-                Adds a file to the data processor's path list.
-
-            - all_sentences():
-                Returns a list of SentencePosition instances for all sentences that contain at least one non-zero word occurrence.
-
-            - sentence_positions(word:str):
-                Returns a list of SentencePosition instances for sentences that contain the specified word.
-
-            - generate():
-                Generates the occurrence dictionary mapping every unique word to its occurrence in each document and sentence.
-
-            - check_word(word:str):
-                Checks if a word is present in the occurrence dictionary.
-
-            - sentence_at(sp:SentencePosition):
-                Returns the specific sentence at the given SentencePosition.
-
-            - occurrences(word:str) -> int:
-                Returns the total number of occurrences of a word across all documents.
-
-            - document_occurences(word:str, index:int) -> int:
-                Returns the number of occurrences of a word in a specific document by index.
-
-            - docs_occurances_list(word:str):
-                Returns a list with the number of occurrences of a specific word in each document.
-
-            - __str__()->str:
-                Returns a string representation of the occurrence dictionary.
-
-Instance Variables:
-    - paths: List[str]
-        List of file paths for the documents.
-
-    - occur_dict: Dict[str, dict[int, npt.NDArray]]
-        A nested dictionary where keys are words and values are dictionaries that map document indices to arrays representing word occurrence in sentences.
-
-    - sentences: list
-        A list where each element contains the set of unique tokens found in the corresponding sentence of all documents.
-
-    - sentences_size: list
-        A list holding the sentence count for each document.
-
-Private Instance Variables:
-    - word_count_in_each_doc: npt.NDArray
-        An numpy array holding the count of words for each document.
-"""
-
 from dataclasses import dataclass
 from collections import defaultdict
 import os, re, string
 import numpy as np
 import numpy.typing as npt
 from typing import Dict, List, Tuple
+from difflib import get_close_matches
+
+from modules.jsonparser import Documents
 
 
 def sentencize(str) -> List[str]:
@@ -136,14 +69,27 @@ class DataProcessor:
                     self.occur_dict[token][doc_index][i] = sentence_tokens.count(token)
 
     # development helpers
+    def get_closest_word_all_docs(self, word):
+        words = self.occur_dict.keys()
+        return get_close_matches(word, words)[0];
+
+    def get_closest_word_doc(self, word, doc_index):
+        words = self.document_words(doc_index)
+        return get_close_matches(word, words)[0]
+
     def check_word(self, word:str):
         if word not in self.occur_dict:
             raise KeyError(f"Error: word \"{word}\" not found in this instance of DataProcessor.")
 
     def sentence_at(self, sp:SentencePosition):
-        with open(self.paths[sp.doc_index]) as file:
+        # with open(self.paths[sp.doc_index]) as file:
+        #     data = file.read()
+        return self.document_sentences(sp.doc_index)[sp.sentence_index]
+
+    def document_sentences(self, doc_index):
+        with open(self.paths[doc_index]) as file:
             data = file.read()
-        return sentencize(data)[sp.sentence_index]
+        return sentencize(data)
 
     def occurences(self, word:str) -> int:
         self.check_word(word)
@@ -157,6 +103,12 @@ class DataProcessor:
             return np.sum(self.occur_dict[word][index])
         except(KeyError):
             return 0
+    
+    def count_sentences_in_document(self, doc_index):
+        return self.document_sentences(doc_index).count()
+    
+    def count_sentences_with_word_in_document(self, word, doc_index):
+        return len(self.occur_dict[word][doc_index].nonzero()[0])
 
     def docs_occurances_list(self, word:str):
         self.check_word(word)
@@ -164,6 +116,9 @@ class DataProcessor:
         for key,value in self.occur_dict[word].items():
             output_arr[key] = np.sum(value)
         return output_arr
+
+    def document_words(self, doc_index):
+        return [word for word in self.occur_dict if doc_index in self.occur_dict[word]]
 
     def __str__(self)->str:
         output = ""

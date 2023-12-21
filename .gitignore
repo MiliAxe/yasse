@@ -7,7 +7,6 @@ data/
 data.json
 projectDoc.pdf
 test/
-tests/
 test.py
 
 # C extensions

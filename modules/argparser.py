@@ -11,4 +11,4 @@ def is_file(str):
 parser = argparse.ArgumentParser(prog="main.py", description="yet another simple search engine, a uni project.")
 parser.add_argument('files',action="extend", nargs="*", type=is_file, default=[])
 parser.add_argument('-j', '--json', action="store", type=is_file, default="")
-parser.add_argument('-q', '--query', action="append", type=str, default=[])
+parser.add_argument('-q', '--query', action="store", type=str, default="")

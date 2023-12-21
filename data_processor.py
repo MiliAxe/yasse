@@ -3,10 +3,12 @@ import os, re, string
 import numpy as np
 import numpy.typing as npt
 from typing import Dict, List
+import difflib
 
 
 def sentencize(str) -> List[str]:
-    return list(filter(None, re.split(r'\.\s+', str)))
+    return list(str.split('\n'))
+    # return list(filter(None, re.split(r'\.\s+', str)))
     # return str.split('. ')
 
 def tokenize(str) -> List[str]:
@@ -59,9 +61,10 @@ class DataProcessor:
             data = file.read()
         return sentencize(data)[sentence_index]
 
-    def occurences(self, word:str) -> int:
+    def occurences(self, word:str) -> int: # gotta use difflib here
         self.check_word(word)
-        return np.sum(np.concatenate(list(self.occur_dict[word].values())))
+        return np.sum(np.concatenate((word, list(self.occur_dict[word].values()))))
+        # return np.sum(np.concatenate(list(self.occur_dict[word].values())))
 
 
     def document_occurences(self, word:str, index:int) -> int:

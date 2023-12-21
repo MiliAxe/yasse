@@ -1,5 +1,8 @@
 import unittest
-from data_processor import DataProcessor
+from dataprocessor import DataProcessor, SentencePosition
+
+def list_to_sentence_position(tuple_list):
+    return [SentencePosition(*tup) for tup in tuple_list]
 
 class TestDataProcessor(unittest.TestCase):
     def setUp(self):
@@ -15,11 +18,18 @@ class TestDataProcessor(unittest.TestCase):
         self.assertEqual(self.dp.docs_occurances_list("lorem").tolist(), [0, 1, 0, 5])
         self.assertEqual(self.dp.docs_occurances_list("test").tolist(), [2, 2, 0, 0])
 
+    def test_sentence_positions(self):
+        self.assertEqual(self.dp.sentence_positions("this"),   list_to_sentence_position([(0,0), (0,1), (0,2), (0,3), (1,1), (2,2)]))
+        self.assertEqual(self.dp.sentence_positions("the"),    list_to_sentence_position([(2,1)]))
+        self.assertEqual(self.dp.sentence_positions("test"),   list_to_sentence_position([(0,0), (0,2), (1,1), (1,2)]))
+        self.assertEqual(self.dp.sentence_positions("lorem"),  list_to_sentence_position([(1,0), (3,0), (3,2), (3,4), (3,5)]))
+
     def test_sentence_at(self):
-        self.assertEqual(self.dp.sentence_at(0, 1), "it should have no in this sentence")
-        self.assertEqual(self.dp.sentence_at(3, 0), 
+        self.assertEqual(self.dp.sentence_at(SentencePosition(0, 1)), "it should have no in this sentence")
+        self.assertEqual(self.dp.sentence_at(SentencePosition(3, 0)), 
         "Lorem ipsum dolor sit amet, officia excepteur ex fugiat reprehenderit enim labore culpa sint ad nisi Lorem pariatur mollit ex esse exercitation amet")
-        self.assertEqual(self.dp.sentence_at(2, -1), "even this has been only word that occurred in every sentence imaginable")
+        self.assertEqual(self.dp.sentence_at(SentencePosition(2, -1)), "even this has been only word that occurred in every sentence imaginable")
+        self.assertEqual(self.dp.sentence_at(SentencePosition(-1,-1)), "Voluptate laboris sint cupidatat ullamco ut ea consectetur et est culpa et culpa duis")
 
     def test_docs_words_count_list(self):
         dp_tmp = DataProcessor("data/document_1924.txt")

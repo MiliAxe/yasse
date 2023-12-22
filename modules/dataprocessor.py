@@ -1,8 +1,9 @@
+from dataclasses import dataclass
 from collections import defaultdict
 import os, re, string
 import numpy as np
 import numpy.typing as npt
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 def sentencize(str) -> List[str]:
@@ -13,13 +14,20 @@ def tokenize(str) -> List[str]:
     return str.lower().translate(str.maketrans('', '', string.punctuation)).split()
     # return str.lower().replace('. ', ' ').split()
 
+@dataclass
+class SentencePosition:
+    doc_index: int
+    sentence_index: int
+
 class DataProcessor:
     paths: List[str]
     occur_dict:Dict[str,Dict[int,npt.NDArray]]
+    sentences:list
     def __init__(self, path=None) -> None:
         self.occur_dict = defaultdict(dict)
         self.sentences_size = list()
         self.paths = list()
+        self.sentences = list()
         if path is not None:
             self.add_file(path)
 
@@ -29,6 +37,12 @@ class DataProcessor:
 
     def add_file(self, path) -> None:
         self.paths.append(path)
+
+    def all_sentences(self):
+        return [SentencePosition(doc_key, sentence_i) for word in self.occur_dict for doc_key, array in self.occur_dict[word].items() for sentence_i,occur in enumerate(array) if occur != 0]
+
+    def sentence_positions(self, word:str):
+        return [SentencePosition(doc_key, sentence_i) for doc_key,array in self.occur_dict[word].items() for sentence_i,occur in enumerate(array) if occur != 0]
 
     def generate(self):
         self.word_count_in_each_doc = np.zeros(len(self.paths), np.uint16)
@@ -43,10 +57,12 @@ class DataProcessor:
                 # sentence count
                 self.occur_dict[token][doc_index] = np.zeros(self.sentences_size[doc_index],np.uint8)
 
+            self.sentences.append([])
             for i, sentence in enumerate(sentences):
                 sentence_tokens = tokenize(sentence)
                 # self.doc_wordcount_list[doc_index] += len(sentence_tokens)
-                for token in set(sentence_tokens):
+                self.sentences[-1].append(set(sentence_tokens))
+                for token in self.sentences[-1][-1]:
                     self.occur_dict[token][doc_index][i] = sentence_tokens.count(token)
 
     # development helpers
@@ -54,15 +70,14 @@ class DataProcessor:
         if word not in self.occur_dict:
             raise KeyError(f"Error: word \"{word}\" not found in this instance of DataProcessor.")
 
-    def sentence_at(self, doc_index:int, sentence_index:int):
-        with open(self.paths[doc_index]) as file:
+    def sentence_at(self, sp:SentencePosition):
+        with open(self.paths[sp.doc_index]) as file:
             data = file.read()
-        return sentencize(data)[sentence_index]
+        return sentencize(data)[sp.sentence_index]
 
     def occurences(self, word:str) -> int:
         self.check_word(word)
         return np.sum(np.concatenate(list(self.occur_dict[word].values())))
-
 
     def document_occurences(self, word:str, index:int) -> int:
         if index >= len(self.paths) or index < 0:

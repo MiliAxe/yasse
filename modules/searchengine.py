@@ -55,7 +55,9 @@ class SearchEngine:
             word in self.dp.document_words(doc_index)}
 
     def cosine_similarity_of_doc(self, query, doc_index):
-        closest_query = [self.dp.get_closest_word_all_docs(word) for word in tokenize(query)]
+        # causes a lot of performance issues
+        # closest_query = [self.dp.get_closest_word_all_docs(word) for word in tokenize(query)]
+        closest_query = tokenize(query)
         tf_idf_query = {word: self.tf_word_in_one_sentence(word, query) * self.idf_word_in_all_docs(word) for word in
                         closest_query}
 

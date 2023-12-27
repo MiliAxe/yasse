@@ -3,10 +3,11 @@ from collections import defaultdict
 import os, re, string
 import numpy as np
 import numpy.typing as npt
-from typing import Dict, List, Tuple
+from typing import Dict, List
 from difflib import get_close_matches
 
 from modules.jsonparser import Documents
+from collections import Counter
 
 
 def sentencize(str) -> List[str]:
@@ -58,15 +59,39 @@ class DataProcessor:
 
             for token in set(tokenize(data)):
                 # sentence count
-                self.occur_dict[token][doc_index] = np.zeros(self.sentences_size[doc_index],np.uint8)
+                self.occur_dict[token][doc_index] = np.zeros(self.sentences_size[doc_index], np.uint8)
 
             self.sentences.append([])
             for i, sentence in enumerate(sentences):
                 sentence_tokens = tokenize(sentence)
-                # self.doc_wordcount_list[doc_index] += len(sentence_tokens)
+                token_counts = Counter(sentence_tokens)
                 self.sentences[-1].append(set(sentence_tokens))
-                for token in self.sentences[-1][-1]:
-                    self.occur_dict[token][doc_index][i] = sentence_tokens.count(token)
+                for token, count in token_counts.items():
+                    self.occur_dict[token][doc_index][i] = count
+        
+
+    # def generate(self):
+    #     self.word_count_in_each_doc = np.zeros(len(self.paths), np.uint16)
+    #     for doc_index, path in enumerate(self.paths):
+    #         with open(path, encoding='utf-8') as file:
+    #             data = file.read()
+    #         current_doc_sentences = sentencize(data)
+    #         self.sentences.append(current_doc_sentences)
+    #         self.sentences_size.append(len(current_doc_sentences))
+    #         self.word_count_in_each_doc[doc_index] = len(tokenize(data))
+
+    #         for unique_word in set(tokenize(data)):
+    #             if unique_word not in self.occur_dict:
+    #                 # self.occur_dict[unique_word] = lil_array((len(self.paths), 80), dtype=np.uint8)
+    #                 self.occur_dict[unique_word] = np.zeros((len(self.paths), 80), dtype=np.uint8)
+
+    #             for sentence_index, sentence in enumerate(current_doc_sentences):
+    #                 sentence_tokens = tokenize(sentence)
+    #                 self.occur_dict[unique_word][doc_index, sentence_index] = sentence_tokens.count(unique_word)
+            
+    #     for word in self.occur_dict:
+    #         self.occur_dict[word] = csr_array(self.occur_dict[word])
+
 
     # development helpers
     def get_closest_word_all_docs(self, word):

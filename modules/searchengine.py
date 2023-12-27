@@ -1,6 +1,7 @@
 import heapq
 import math
 from typing import Dict, List
+from scipy.sparse import csr_array
 
 import numpy as np
 import numpy.typing as npt
@@ -42,8 +43,10 @@ class SearchEngine:
                     self.dp.count_sentences_with_word_in_document(word, doc_index) + 1))
 
     def calculate_tf_idf_all_docs(self):
-        self.tf_idf_dict = {word: self.tf_word_in_all_docs(
-            word) * self.idf_word_in_all_docs(word) for word in self.dp.occur_dict}
+        # self.tf_idf_dict = {word: self.tf_word_in_all_docs(
+        #     word) * self.idf_word_in_all_docs(word) for word in self.dp.occur_dict}
+
+        self.tf_idf_dict = {word: csr_array(self.tf_word_in_all_docs(word)* self.idf_word_in_all_docs(word)) for word in self.dp.occur_dict}
 
     def calculate_tf_idf_doc(self, doc_index):
         self.tf_idf_sentences_dict = {
@@ -57,7 +60,7 @@ class SearchEngine:
                         closest_query}
 
         doc_words = self.dp.document_words(doc_index)
-        tf_idf_doc = {word: self.tf_idf_dict[word][doc_index] for word in doc_words}
+        tf_idf_doc = {word: self.tf_idf_dict[word][0, doc_index] for word in doc_words}
 
         # calculating the numerator
 

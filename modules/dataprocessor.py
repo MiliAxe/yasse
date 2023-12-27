@@ -50,7 +50,7 @@ class DataProcessor:
     def generate(self):
         self.word_count_in_each_doc = np.zeros(len(self.paths), np.uint16)
         for doc_index, path in enumerate(self.paths):
-            with open(path) as file:
+            with open(path, encoding='utf-8') as file:
                 data = file.read()
             sentences = sentencize(data)
             self.sentences_size.append(len(sentences))
@@ -87,7 +87,7 @@ class DataProcessor:
         return self.document_sentences(sp.doc_index)[sp.sentence_index]
 
     def document_sentences(self, doc_index):
-        with open(self.paths[doc_index]) as file:
+        with open(self.paths[doc_index], encoding='utf-8') as file:
             data = file.read()
         return sentencize(data)
 

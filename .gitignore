@@ -8,6 +8,8 @@ data.json
 projectDoc.pdf
 test/
 test.py
+*.bin
+*.html
 
 # C extensions
 *.so

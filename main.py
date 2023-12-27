@@ -1,6 +1,7 @@
 #!/bin/python3
 from modules.argparser import parser
-from modules.searchengine import SearchEngine, SentencePosition
+from modules.searchengine import SearchEngine
+from modules.dataprocessor import SentencePosition
 
 if __name__ == "__main__":
     args = parser.parse_args()

@@ -28,13 +28,19 @@ se.calculate_tf_idf_all_docs()
 if find_cosine_similarities:
     query = "microsoft rba"
 
-    relevant_docs = sorted(se.cosine_similarities_docs(query), key=lambda x: x[2], reverse=True)
+    relevant_docs = sorted(
+        se.cosine_similarities_docs(query), key=lambda x: x[2], reverse=True
+    )
     print(relevant_docs[0])
-    relevant_sentences = sorted(se.cosine_similarities_doc_sentences(query, relevant_docs[0][0]),
-                                key=lambda x: x[1], reverse=True)
+    relevant_sentences = sorted(
+        se.cosine_similarities_doc_sentences(query, relevant_docs[0][0]),
+        key=lambda x: x[1],
+        reverse=True,
+    )
     print(relevant_sentences[0])
     print(
-        f"relevant sentence: {se.dp.sentence_at(SentencePosition(relevant_docs[0][0], relevant_sentences[0][0]))}")
+        f"relevant sentence: {se.dp.sentence_at(SentencePosition(relevant_docs[0][0], relevant_sentences[0][0]))}"
+    )
 
     highest_tf_word = se.get_word_with_highest_tf_in_doc(relevant_docs[0][0])
     highest_idf_word = se.get_top_five_idf_words_in_doc(relevant_docs[0][0])
@@ -43,15 +49,17 @@ if find_cosine_similarities:
 end_time = time.time()
 exec_time = end_time - start_time
 
-print(f"Adding {bcolors.BLUE}{file_count}{bcolors.ENDC} files took {bcolors.BLUE}{exec_time:.3f}{bcolors.ENDC} seconds",
-      end=" ")
+print(
+    f"Adding {bcolors.BLUE}{file_count}{bcolors.ENDC} files took {bcolors.BLUE}{exec_time:.3f}{bcolors.ENDC} seconds",
+    end=" ",
+)
 
 if find_cosine_similarities:
     print("(Cosine similarities were calculated too)")
 else:
     print()
 try:
-    assert (exec_time < time_limit)
+    assert exec_time < time_limit
     print(bcolors.GREEN + bcolors.BOLD + "Speed seems good!" + bcolors.ENDC)
 except AssertionError:
     print(bcolors.RED + "Speed test failed! 💀" + bcolors.ENDC)

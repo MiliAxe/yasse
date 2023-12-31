@@ -54,19 +54,30 @@ class SearchEngine:
                                                                                                         doc_index) for
             word in self.dp.document_words(doc_index)}
 
-    def cosine_similarity_of_doc(self, query, doc_index):
-        # causes a lot of performance issues
-        # closest_query = [self.dp.get_closest_word_all_docs(word) for word in tokenize(query)]
-        closest_query = tokenize(query)
-        tf_idf_query = {word: self.tf_word_in_one_sentence(word, query) * self.idf_word_in_all_docs(word) for word in
-                        closest_query}
-
+    def get_tf_idf_words_of_doc(self, doc_index) -> Dict[str, csr_array]:
         doc_words = self.dp.document_words(doc_index)
-        tf_idf_doc = {word: self.tf_idf_dict[word][0, doc_index] for word in doc_words}
+        return {word: self.tf_idf_dict[word][0, doc_index] for word in doc_words}
+
+    def get_tf_idf_words_of_sentence_one_doc(self, doc_index, sentence_index):
+        doc_words = self.dp.document_words(doc_index)
+        return {word: self.tf_idf_sentences_dict[word][sentence_index] for word in doc_words}
+
+    def get_tf_idf_words_of_sentence(self, sentence):
+        # causes a lot of performance issues
+        # closest_sentence = [self.dp.get_closest_word_all_docs(word) for word in tokenize(query)]
+        closest_sentence = tokenize(sentence)
+        return {word: self.tf_word_in_one_sentence(word, sentence) * self.idf_word_in_all_docs(word) for word in
+                        closest_sentence}
+
+
+    def cosine_similarity_of_doc(self, query, doc_index):
+        tf_idf_query = self.get_tf_idf_words_of_sentence(query)
+
+        tf_idf_doc = self.get_tf_idf_words_of_doc(doc_index)
 
         # calculating the numerator
 
-        common_words_doc_query = set(doc_words) & set(closest_query)
+        common_words_doc_query = set(tf_idf_doc.keys()) & set(tf_idf_query.keys())
         numerator = 0
         for word in common_words_doc_query:
             numerator += tf_idf_query[word] * tf_idf_doc[word]
@@ -87,16 +98,13 @@ class SearchEngine:
                 range(len(self.dp.paths))]
 
     def cosine_similarity_of_sentence(self, query, doc_index, sentence_index):
-        closest_query = [self.dp.get_closest_word_doc(word, doc_index) for word in tokenize(query)]
-        tf_idf_query = {word: self.tf_word_in_one_sentence(word, query) * self.idf_word_in_doc(word, doc_index) for word
-                        in closest_query}
+        tf_idf_query = self.get_tf_idf_words_of_sentence(query)
 
-        doc_words = self.dp.document_words(doc_index)
-        tf_idf_sentence = {word: self.tf_idf_sentences_dict[word][sentence_index] for word in doc_words}
+        tf_idf_sentence = self.get_tf_idf_words_of_sentence_one_doc(doc_index, sentence_index)
 
         # calculating the numerator
 
-        common_words_doc_query = set(doc_words) & set(closest_query)
+        common_words_doc_query = set(tf_idf_sentence) & set(tf_idf_query)
         numerator = 0
         for word in common_words_doc_query:
             numerator += tf_idf_query[word] * tf_idf_sentence[word]

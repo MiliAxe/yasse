@@ -69,29 +69,31 @@ class SearchEngine:
         return {word: self.tf_word_in_one_sentence(word, sentence) * self.idf_word_in_all_docs(word) for word in
                         closest_sentence}
 
-
-    def cosine_similarity_of_doc(self, query, doc_index):
-        tf_idf_query = self.get_tf_idf_words_of_sentence(query)
-
-        tf_idf_doc = self.get_tf_idf_words_of_doc(doc_index)
-
+    def calculate_cosine_similarity(self, tf_idf_query, tf_idf_corpus):
         # calculating the numerator
 
-        common_words_doc_query = set(tf_idf_doc.keys()) & set(tf_idf_query.keys())
+        common_words_doc_query = set(tf_idf_corpus) & set(tf_idf_query)
         numerator = 0
         for word in common_words_doc_query:
-            numerator += tf_idf_query[word] * tf_idf_doc[word]
+            numerator += tf_idf_query[word] * tf_idf_corpus[word]
 
         # calculating the denumerator
 
-        sum1 = sum([tf_idf_query[x] ** 2 for x in list(tf_idf_query.keys())])
-        sum2 = sum([tf_idf_doc[x] ** 2 for x in list(tf_idf_doc.keys())])
+        sum1 = sum([tf_idf_query[x] ** 2 for x in list(tf_idf_query)])
+        sum2 = sum([tf_idf_corpus[x] ** 2 for x in list(tf_idf_corpus)])
         denominator = math.sqrt(sum1) + math.sqrt(sum2)
 
         if not denominator:
             return 0.0
         else:
             return float(numerator) / denominator
+
+    def cosine_similarity_of_doc(self, query, doc_index):
+        tf_idf_query = self.get_tf_idf_words_of_sentence(query)
+
+        tf_idf_doc = self.get_tf_idf_words_of_doc(doc_index)
+
+        return self.calculate_cosine_similarity(tf_idf_query, tf_idf_doc)
 
     def cosine_similarities_docs(self, query):
         return [(index, self.dp.paths[index], self.cosine_similarity_of_doc(query, index)) for index in
@@ -102,23 +104,7 @@ class SearchEngine:
 
         tf_idf_sentence = self.get_tf_idf_words_of_sentence_one_doc(doc_index, sentence_index)
 
-        # calculating the numerator
-
-        common_words_doc_query = set(tf_idf_sentence) & set(tf_idf_query)
-        numerator = 0
-        for word in common_words_doc_query:
-            numerator += tf_idf_query[word] * tf_idf_sentence[word]
-
-        # calculating the denumerator
-
-        sum1 = sum([tf_idf_query[x] ** 2 for x in list(tf_idf_query.keys())])
-        sum2 = sum([tf_idf_sentence[x] ** 2 for x in list(tf_idf_sentence.keys())])
-        denominator = math.sqrt(sum1) + math.sqrt(sum2)
-
-        if not denominator:
-            return 0.0
-        else:
-            return float(numerator) / denominator
+        return self.calculate_cosine_similarity(tf_idf_query, tf_idf_sentence)
 
     def cosine_similarities_doc_sentences(self, query, doc_index):
         self.calculate_tf_idf_doc(doc_index)

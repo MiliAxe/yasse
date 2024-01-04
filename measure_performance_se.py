@@ -7,9 +7,9 @@ from modules.dataprocessor import SentencePosition
 
 
 # testing the speed
-file_count = 50000
+file_count = 100
 time_limit = 100
-find_cosine_similarities = 0
+find_cosine_similarities = 1
 try:
     file_count = int(sys.argv[1])
     find_cosine_similarities = int(sys.argv[2])

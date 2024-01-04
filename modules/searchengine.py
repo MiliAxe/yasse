@@ -6,11 +6,11 @@ from scipy.sparse import csr_array
 import numpy as np
 import numpy.typing as npt
 
-from .dataprocessor import DataProcessor, tokenize
+from dataprocessor import DataProcessor, tokenize
 
 
 class SearchEngine:
-    tf_idf_dict: Dict[str, npt.NDArray]
+    # tf_idf_dict: Dict[str, npt.NDArray]
     tf_idf_sentences_dict: Dict[str, npt.NDArray]
 
     def __init__(self, paths: List[str]) -> None:
@@ -65,36 +65,46 @@ class SearchEngine:
             for word in self.dp.document_words(doc_index)
         }
 
-    def cosine_similarity_of_doc(self, query, doc_index):
-        # causes a lot of performance issues
-        # closest_query = [self.dp.get_closest_word_all_docs(word) for word in tokenize(query)]
-        closest_query = tokenize(query)
-        tf_idf_query = {
-            word: self.tf_word_in_one_sentence(word, query)
-            * self.idf_word_in_all_docs(word)
-            for word in closest_query
-        }
-
+    def get_tf_idf_words_of_doc(self, doc_index) -> Dict[str, csr_array]:
         doc_words = self.dp.document_words(doc_index)
-        tf_idf_doc = {word: self.tf_idf_dict[word][0, doc_index] if word in self.tf_idf_dict else 0 for word in doc_words}
+        return {word: self.tf_idf_dict[word][0, doc_index] for word in doc_words}
 
+    def get_tf_idf_words_of_sentence_one_doc(self, doc_index, sentence_index):
+        doc_words = self.dp.document_words(doc_index)
+        return {word: self.tf_idf_sentences_dict[word][sentence_index] for word in doc_words}
+
+    def get_tf_idf_words_of_sentence(self, sentence):
+        # causes a lot of performance issues
+        # closest_sentence = [self.dp.get_closest_word_all_docs(word) for word in tokenize(query)]
+        closest_sentence = tokenize(sentence)
+        return {word: self.tf_word_in_one_sentence(word, sentence) * self.idf_word_in_all_docs(word) for word in
+                        closest_sentence}
+
+    def calculate_cosine_similarity(self, tf_idf_query, tf_idf_corpus):
         # calculating the numerator
 
-        common_words_doc_query = set(doc_words) & set(closest_query)
+        common_words_doc_query = set(tf_idf_corpus) & set(tf_idf_query)
         numerator = 0
         for word in common_words_doc_query:
-            numerator += tf_idf_query[word] * tf_idf_doc[word]
+            numerator += tf_idf_query[word] * tf_idf_corpus[word]
 
         # calculating the denumerator
 
-        sum1 = sum([tf_idf_query[x] ** 2 for x in list(tf_idf_query.keys())])
-        sum2 = sum([tf_idf_doc[x] ** 2 for x in list(tf_idf_doc.keys())])
+        sum1 = sum([tf_idf_query[x] ** 2 for x in list(tf_idf_query)])
+        sum2 = sum([tf_idf_corpus[x] ** 2 for x in list(tf_idf_corpus)])
         denominator = math.sqrt(sum1) + math.sqrt(sum2)
 
         if not denominator:
             return 0.0
         else:
             return float(numerator) / denominator
+
+    def cosine_similarity_of_doc(self, query, doc_index):
+        tf_idf_query = self.get_tf_idf_words_of_sentence(query)
+
+        tf_idf_doc = self.get_tf_idf_words_of_doc(doc_index)
+
+        return self.calculate_cosine_similarity(tf_idf_query, tf_idf_doc)
 
     def cosine_similarities_docs(self, query):
         return [
@@ -103,39 +113,11 @@ class SearchEngine:
         ]
 
     def cosine_similarity_of_sentence(self, query, doc_index, sentence_index):
-        # Causes a lot of performance issues
-        # closest_query = [
-        #     self.dp.get_closest_word_doc(word, doc_index) for word in tokenize(query)
-        # ]
-        closest_query = tokenize(query)
-        tf_idf_query = {
-            word: self.tf_word_in_one_sentence(word, query)
-            * self.idf_word_in_doc(word, doc_index)
-            for word in closest_query
-        }
+        tf_idf_query = self.get_tf_idf_words_of_sentence(query)
 
-        doc_words = self.dp.document_words(doc_index)
-        tf_idf_sentence = {
-            word: self.tf_idf_sentences_dict[word][sentence_index] if word in self.tf_idf_sentences_dict else 0 for word in doc_words
-        }
+        tf_idf_sentence = self.get_tf_idf_words_of_sentence_one_doc(doc_index, sentence_index)
 
-        # calculating the numerator
-
-        common_words_doc_query = set(doc_words) & set(closest_query)
-        numerator = 0
-        for word in common_words_doc_query:
-            numerator += tf_idf_query[word] * tf_idf_sentence[word]
-
-        # calculating the denumerator
-
-        sum1 = sum([tf_idf_query[x] ** 2 for x in list(tf_idf_query.keys())])
-        sum2 = sum([tf_idf_sentence[x] ** 2 for x in list(tf_idf_sentence.keys())])
-        denominator = math.sqrt(sum1) + math.sqrt(sum2)
-
-        if not denominator:
-            return 0.0
-        else:
-            return float(numerator) / denominator
+        return self.calculate_cosine_similarity(tf_idf_query, tf_idf_sentence)
 
     def cosine_similarities_doc_sentences(self, query, doc_index):
         self.calculate_tf_idf_doc(doc_index)

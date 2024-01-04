@@ -5,14 +5,15 @@ import numpy as np
 import numpy.typing as npt
 from typing import Dict, List
 from difflib import get_close_matches
+from scipy.sparse import lil_array, csr_array
 
-from modules.jsonparser import Documents
 from collections import Counter
 
 
 def sentencize(str) -> List[str]:
-    return list(filter(None, re.split(r"\.\s+", str)))
+    # return list(filter(None, re.split(r"\.\s+", str)))
     # return str.split('. ')
+    return str.split("\n")
 
 
 def tokenize(str) -> List[str]:
@@ -152,7 +153,10 @@ class DataProcessor:
         return self.document_sentences(doc_index).count()
 
     def count_sentences_with_word_in_document(self, word, doc_index):
-        return len(self.occur_dict[word][doc_index].nonzero()[0])
+        try:   
+            return len(self.occur_dict[word][doc_index].nonzero()[0])
+        except KeyError:
+            return 0
 
     def docs_occurances_list(self, word: str):
         self.check_word(word)

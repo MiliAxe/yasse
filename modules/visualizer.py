@@ -6,8 +6,9 @@ from sys import argv
 from sklearn.decomposition import TruncatedSVD
 
 class Visualizer:
-    # tf_idf_matrix: csr_matrix
+    tf_idf_matrix: csr_matrix
     tf_idf_word_index: Dict[int, str]
+    # tf_idf_decomposed_matrix: csr_matrix
     searchengine: SearchEngine
 
     def __init__(self, paths: List[str]) -> None:
@@ -28,6 +29,20 @@ class Visualizer:
         stacked_arrays = vstack(tf_idf_arrays)
 
         self.tf_idf_matrix = csr_matrix(stacked_arrays.transpose())
+
+    def decompose_to_2d(self):
+        self.generate_tfidf_matrix()
+        
+        # 2d_decomposer = TruncatedSVD(n_components=2)
+        
+        self.tf_idf_decomposed_matrix = TruncatedSVD(n_components=2).fit_transform(self.tf_idf_matrix)
+
+    def computer_clusters(self):
+        self.decompose_to_2d()
+
+        
+
+
 
 
 

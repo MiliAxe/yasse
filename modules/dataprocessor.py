@@ -24,7 +24,7 @@ class SentencePosition:
 
 class DataProcessor:
     paths: List[str]
-    occur_dict:Dict[str,Dict[int,npt.NDArray]]
+    # occur_dict:Dict[str,Dict[int,npt.NDArray]]
     sentences:list
     def __init__(self, path=None) -> None:
         self.occur_dict = defaultdict(dict)
@@ -78,16 +78,16 @@ class DataProcessor:
     #         self.sentences.append(current_doc_sentences)
     #         self.sentences_size.append(len(current_doc_sentences))
     #         self.word_count_in_each_doc[doc_index] = len(tokenize(data))
-
+    #
     #         for unique_word in set(tokenize(data)):
     #             if unique_word not in self.occur_dict:
     #                 # self.occur_dict[unique_word] = lil_array((len(self.paths), 80), dtype=np.uint8)
     #                 self.occur_dict[unique_word] = np.zeros((len(self.paths), 80), dtype=np.uint8)
-
+    #
     #             for sentence_index, sentence in enumerate(current_doc_sentences):
     #                 sentence_tokens = tokenize(sentence)
     #                 self.occur_dict[unique_word][doc_index, sentence_index] = sentence_tokens.count(unique_word)
-            
+    #         
     #     for word in self.occur_dict:
     #         self.occur_dict[word] = csr_array(self.occur_dict[word])
 

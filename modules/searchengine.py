@@ -6,7 +6,7 @@ from scipy.sparse import csr_array
 import numpy as np
 import numpy.typing as npt
 
-from .dataprocessor import DataProcessor, tokenize
+from dataprocessor import DataProcessor, tokenize
 
 
 class SearchEngine:

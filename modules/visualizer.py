@@ -4,6 +4,8 @@ from typing import Dict, List
 from scipy.sparse import csr_array, csr_matrix, vstack
 from sys import argv
 from sklearn.decomposition import TruncatedSVD
+from sklearn.cluster import KMeans
+from argparser import parser
 
 class Visualizer:
     tf_idf_matrix: csr_matrix
@@ -27,33 +29,30 @@ class Visualizer:
             tf_idf_arrays.append(self.searchengine.tf_idf_dict[current_word])
 
         stacked_arrays = vstack(tf_idf_arrays)
-
         self.tf_idf_matrix = csr_matrix(stacked_arrays.transpose())
 
     def decompose_to_2d(self):
         self.generate_tfidf_matrix()
-        
-        # 2d_decomposer = TruncatedSVD(n_components=2)
-        
-        self.tf_idf_decomposed_matrix = TruncatedSVD(n_components=2).fit_transform(self.tf_idf_matrix)
+        decomposer = TruncatedSVD(n_components=2)
+        self.tf_idf_decomposed_matrix = decomposer.fit_transform(self.tf_idf_matrix)
 
-    def computer_clusters(self):
+    def compute_clusters(self, cluster_count):
         self.decompose_to_2d()
-
         
+        kmeans = KMeans(n_clusters=cluster_count, n_init=3, random_state=0)
 
+        kmeans.fit(self.tf_idf_decomposed_matrix)
 
+        self.cluster_centroids = kmeans.cluster_centers_
+        self.cluster_labels = kmeans.labels_
 
-
-
-
+    def plot_clusters(self):
+        plt.scatter(self.tf_idf_decomposed_matrix[:, 0], self.tf_idf_decomposed_matrix[:, 1], c=self.cluster_labels, cmap="viridis", edgecolor="k")
+        plt.show()
+        
 if __name__ == "__main__":
-    paths = [f"data/document_{index}.txt" for index in range(1000)]
-    visualizer = Visualizer(paths)
-    visualizer.generate_tfidf_matrix()
-    new_matrix = TruncatedSVD(n_components=2).fit_transform(visualizer.tf_idf_matrix)
-    plt.style.use("_mpl-gallery")
-    _, ax = plt.subplots()
-    scatter = ax.scatter(new_matrix[:, 0], new_matrix[:, 1])
-    plt.show()
-    # print(visualizer.tf_idf_word_index)
+    args = parser.parse_args()
+    visualizer = Visualizer(args.files)
+
+    visualizer.compute_clusters(3)
+    visualizer.plot_clusters()

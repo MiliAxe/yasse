@@ -1,11 +1,11 @@
-from searchengine import SearchEngine
+from .searchengine import SearchEngine
 import matplotlib.pyplot as plt
 from typing import Dict, List
 from scipy.sparse import csr_array, csr_matrix, vstack
 from sys import argv
 from sklearn.decomposition import TruncatedSVD
 from sklearn.cluster import KMeans
-from argparser import parser
+from .argparser import parser
 
 class Visualizer:
     tf_idf_matrix: csr_matrix

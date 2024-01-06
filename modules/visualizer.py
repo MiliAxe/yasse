@@ -13,10 +13,13 @@ class Visualizer:
     # tf_idf_decomposed_matrix: csr_matrix
     searchengine: SearchEngine
 
-    def __init__(self, paths: List[str]) -> None:
-        self.searchengine = SearchEngine(paths)
-        self.searchengine.calculate_tf_idf_all_docs()
-
+    def __init__(self, *args) -> None:
+        if isinstance(args[0], List[str]):
+            self.searchengine = SearchEngine(args[0])
+            self.searchengine.calculate_tf_idf_all_docs()
+        elif isinstance(args[0], SearchEngine):
+            self.searchengine = args[0]
+    
     def generate_tfidf_word_dict(self):
         self.tf_idf_word_index = {index: word for index, word in enumerate(self.searchengine.tf_idf_dict)}
 

@@ -77,8 +77,8 @@ class SearchEngine:
         # causes a lot of performance issues
         # closest_sentence = [self.dp.get_closest_word_all_docs(word) for word in tokenize(query)]
         closest_sentence = tokenize(sentence)
-        return {word: self.tf_word_in_one_sentence(word, sentence) * self.idf_word_in_all_docs(word) for word in
-                        closest_sentence}
+        return {word: self.tf_word_in_one_sentence(word, sentence) * self.idf_word_in_all_docs(word) for word in # 5
+                        closest_sentence} 
 
     def calculate_cosine_similarity(self, tf_idf_query, tf_idf_corpus):
         # calculating the numerator
@@ -100,16 +100,17 @@ class SearchEngine:
             return float(numerator) / denominator
 
     def cosine_similarity_of_doc(self, query, doc_index):
-        tf_idf_query = self.get_tf_idf_words_of_sentence(query)
+        tf_idf_query = self.get_tf_idf_words_of_sentence(query) # 4
 
-        tf_idf_doc = self.get_tf_idf_words_of_doc(doc_index)
+        tf_idf_doc = self.get_tf_idf_words_of_doc(doc_index) # 
 
-        return self.calculate_cosine_similarity(tf_idf_query, tf_idf_doc)
+        return self.calculate_cosine_similarity(tf_idf_query, tf_idf_doc) # 
 
-    def cosine_similarities_docs(self, query):
+    def cosine_similarities_docs(self, query): # 1 
         return [
-            (index, self.dp.paths[index], self.cosine_similarity_of_doc(query, index))
-            for index in range(len(self.dp.paths))
+            (index, self.dp.paths[index], 
+            self.cosine_similarity_of_doc(query, index)) # 2
+            for index in range(len(self.dp.paths)) # each file
         ]
 
     def cosine_similarity_of_sentence(self, query, doc_index, sentence_index):

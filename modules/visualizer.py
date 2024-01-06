@@ -14,10 +14,10 @@ class Visualizer:
     searchengine: SearchEngine
 
     def __init__(self, *args) -> None:
-        if isinstance(args[0], List[str]):
+        if isinstance(args[0], list):
             self.searchengine = SearchEngine(args[0])
             self.searchengine.calculate_tf_idf_all_docs()
-        elif isinstance(args[0], SearchEngine):
+        else:
             self.searchengine = args[0]
     
     def generate_tfidf_word_dict(self):

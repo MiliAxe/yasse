@@ -13,7 +13,7 @@ from collections import Counter
 def sentencize(str) -> List[str]:
     # return list(filter(None, re.split(r"\.\s+", str)))
     # return str.split('. ')
-    return str.split("\n")
+    return str.lower().split("\n")
 
 
 def tokenize(str) -> List[str]:

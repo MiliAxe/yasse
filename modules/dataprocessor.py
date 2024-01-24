@@ -6,7 +6,10 @@ import numpy.typing as npt
 from typing import Dict, List
 from difflib import get_close_matches
 from scipy.sparse import lil_array, csr_array
-
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import RegexpTokenizer
+from nltk.corpus import stopwords
 from collections import Counter
 
 
@@ -17,7 +20,11 @@ def sentencize(str) -> List[str]:
 
 
 def tokenize(str) -> List[str]:
-    return str.lower().translate(str.maketrans("", "", string.punctuation)).split()
+    stop_words = set(stopwords.words('english'))
+    tokenizer = RegexpTokenizer(r'\w+')
+    Wnl = WordNetLemmatizer()
+    return [Wnl.lemmatize(word) for word in tokenizer.tokenize(str.lower()) if word.lower() not in stop_words]
+    # return str.lower().translate(str.maketrans("", "", string.punctuation)).split()
     # return str.lower().replace('. ', ' ').split()
 
 
